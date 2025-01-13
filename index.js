@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes");
+const menuRoutes = require('./routes/menuRoutes');
 const pelangganRoutes = require("./routes/pelangganRoutes")
 const cors = require("cors");
 
@@ -11,6 +12,8 @@ app.use(cors());
 
 // Routes
 app.use("/auth", authRoutes);
+// Rute untuk menu
+app.use('/api/menus', menuRoutes);
 app.use("/pelanggan", pelangganRoutes);
 
 // Start the server
