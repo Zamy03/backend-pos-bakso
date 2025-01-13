@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes");
+const menuRoutes = require('./routes/menuRoutes');
 const cors = require("cors");
 
 const app = express();
@@ -10,6 +11,8 @@ app.use(cors());
 
 // Routes
 app.use("/auth", authRoutes);
+// Rute untuk menu
+app.use('/api/menus', menuRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
