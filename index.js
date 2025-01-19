@@ -3,6 +3,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const authRoutes = require("./routes/authRoutes");
 const menuRoutes = require('./routes/menuRoutes');
+const pelangganRoutes = require("./routes/pelangganRoutes")
+const pgRoutes = require("./routes/pgRoutes")
 const cors = require("cors");
 
 const app = express();
@@ -13,6 +15,8 @@ app.use(cors());
 app.use("/auth", authRoutes);
 // Rute untuk menu
 app.use('/api/menus', menuRoutes);
+app.use("/pelanggan", pelangganRoutes);
+app.use("/pgw", pgRoutes)
 
 // Start the server
 const PORT = process.env.PORT || 3000;
