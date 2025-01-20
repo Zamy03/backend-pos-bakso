@@ -26,6 +26,29 @@ const getpg = async (req, res) => {
     }
   };
 
+//get pegawai by id
+const getpgById = async (req, res) => {
+    const { id } = req.params;  // Ambil ID dari parameter URL
+
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq('id', id)
+        .single();  // Mengambil satu data saja
+
+        if (error) throw error;
+
+        if (!data) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'User retrieved successfully', data });
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving user', error: error.message });
+    }
+};
+
 const addpg = async (req, res) => {
     const { nama, no_hp, email, password, role } = req.body;
   
