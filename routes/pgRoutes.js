@@ -1,5 +1,5 @@
 const express = require("express");
-const { addpg, editpg, deletepg, getpg } = require("../controllers/pegawaiController");
+const { addpg, editpg, deletepg, getpg } = require("../controllers/pgController");
 
 const router = express.Router();
 router.post("/apg", addpg);
