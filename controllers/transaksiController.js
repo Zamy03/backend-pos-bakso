@@ -18,24 +18,19 @@ const getAllTransaksi = async (req, res) => {
     }
 }
 
-// Get by ID
+const { v4: uuidv4 } = require('uuid'); // Untuk generate transaksi_id unik
 
-// Create transaksi
-const createTransaksi = async (req, res) => {
-    const { id_pelanggan, id_menu, jumlah, gross_amount } = req.body;
-    const id_user = req.user?.id; // Pastikan req.user ada
+const createBatchTransaksi = async (req, res) => {
+    const { id_pelanggan, items } = req.body; // `items` adalah daftar menu dengan jumlah barang
+    const id_user = req.user?.id; // Pastikan `req.user` ada
 
     // Validasi input
-    if (!id_pelanggan || !id_menu || !jumlah || !gross_amount) {
-        return res.status(400).json({ message: 'Missing required fields' });
-    }
-
-    if (isNaN(jumlah) || isNaN(gross_amount)) {
-        return res.status(400).json({ message: 'Jumlah and gross_amount must be numbers' });
+    if (!id_pelanggan || !items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: 'Invalid input, items should be a non-empty array' });
     }
 
     try {
-        // Ambil data pelanggan
+        // Periksa apakah pelanggan ada
         const { data: pelanggan, error: errorPelanggan } = await supabase
             .from('pelanggan')
             .select('*')
@@ -46,58 +41,76 @@ const createTransaksi = async (req, res) => {
             return res.status(404).json({ message: 'Pelanggan not found' });
         }
 
-        // Ambil data menu
-        const { data: menu, error: errorMenu } = await supabase
+        // Ambil semua ID menu dari items
+        const menuIds = items.map(item => item.id_menu);
+
+        // Periksa semua menu yang diperlukan
+        const { data: menus, error: errorMenus } = await supabase
             .from('menu')
-            .select('*')
-            .eq('id', id_menu)
-            .single();
+            .select('id_menu, nama_menu, harga')
+            .in('id_menu', menuIds);
 
-        if (errorMenu || !menu) {
-            return res.status(404).json({ message: 'Menu not found' });
+        if (errorMenus) {
+            return res.status(500).json({ message: 'Error fetching menus', error: errorMenus.message });
         }
 
-        // Ambil data user
-        const { data: user, error: errorUser } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', id_user)
-            .single();
+        // Temukan menu yang tidak ada
+        const missingMenus = menuIds.filter(
+            id_menu => !menus.some(menu => menu.id_menu === id_menu)
+        );
 
-        if (errorUser || !user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (missingMenus.length > 0) {
+            return res.status(404).json({
+                message: 'Some menus were not found',
+                missingMenus,
+            });
         }
 
-        const id_transaksi = `TX-${nanoid(4)}-TX-${nanoid(8)}`;
+        // Inisialisasi transaksi batch
+        const transaksiData = items.map(item => {
+            const menu = menus.find(menu => menu.id_menu === item.id_menu);
+            const gross_amount = item.jumlah * menu.harga;
 
-        // Masukkan transaksi dengan nama_menu dari tabel menu
+            return {
+                transaksi_id: uuidv4(), // Generate ID unik untuk setiap transaksi
+                id_pelanggan,
+                id_menu: menu.id_menu,
+                nama_menu: menu.nama_menu,
+                jumlah: item.jumlah,
+                gross_amount,
+                id_user,
+            };
+        });
+
+        // Insert semua transaksi sekaligus
         const { data, error } = await supabase
             .from('transactions')
-            .insert([
-                {
-                    id_transaksi,
-                    id_pelanggan,
-                    id_menu,
-                    nama_menu: menu.nama_menu, // Mengambil nama_menu dari tabel menu
-                    jumlah,
-                    gross_amount,
-                    id_user,
-                },
-            ])
+            .insert(transaksiData)
             .select(); // Mengembalikan data transaksi yang baru dibuat
 
         if (error) {
             throw error;
         }
 
-        return res.status(201).json({ message: 'Transaction created successfully', data });
+        // Hitung total gross_amount keseluruhan transaksi
+        const total_gross_amount = transaksiData.reduce(
+            (total, item) => total + item.gross_amount,
+            0
+        );
+
+        return res.status(201).json({
+            message: 'Batch transaction created successfully',
+            total_gross_amount,
+            data,
+        });
     } catch (error) {
         console.error(error); // Logging untuk debug
         return res.status(500).json({
-            message: 'Error creating transaction',
+            message: 'Error creating batch transaction',
             error: error.message || 'Unknown error',
         });
     }
 };
 
 
+module.exports = { getAllTransaksi, createBatchTransaksi };
