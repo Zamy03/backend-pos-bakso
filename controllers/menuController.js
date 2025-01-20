@@ -5,7 +5,7 @@ const getAllMenus = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('menu')
-            .select('*, kategori(nama_kategori)'); // Supabase akan menghubungkan menu dengan kategori berdasarkan id_kategori
+            .select('*'); // Tidak perlu relasi dengan tabel kategori
         if (error) throw error;
         res.status(200).json(data);
     } catch (error) {
@@ -19,7 +19,7 @@ const getMenuById = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('menu')
-            .select('*, kategori(nama_kategori)') // Mengambil data nama kategori melalui relasi
+            .select('*') // Tidak ada relasi lagi
             .eq('id_menu', id)
             .single();
         if (error) throw error;
@@ -29,13 +29,14 @@ const getMenuById = async (req, res) => {
     }
 };
 
+
 // Menambahkan menu baru
 const addMenu = async (req, res) => {
-    const { nama_menu, id_kategori, harga, tersedia } = req.body;
+    const { nama_menu, kategori, harga, tersedia } = req.body; // Menggunakan nama_kategori langsung
     try {
         const { data, error } = await supabase
             .from('menu')
-            .insert([{ nama_menu, id_kategori, harga, tersedia }])
+            .insert([{ nama_menu, kategori, harga, tersedia }])
             .select();
         if (error) throw error;
         res.status(201).json(data[0]);
@@ -44,14 +45,15 @@ const addMenu = async (req, res) => {
     }
 };
 
+
 // Memperbarui menu berdasarkan ID
 const updateMenu = async (req, res) => {
     const { id } = req.params;
-    const { nama_menu, id_kategori, harga, tersedia } = req.body;
+    const { nama_menu, kategori, harga, tersedia } = req.body; // Menyertakan nama_kategori
     try {
         const { data, error } = await supabase
             .from('menu')
-            .update({ nama_menu, id_kategori, harga, tersedia })
+            .update({ nama_menu, kategori, harga, tersedia })
             .eq('id_menu', id)
             .select();
         if (error) throw error;
@@ -60,6 +62,7 @@ const updateMenu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Menghapus menu berdasarkan ID
 const deleteMenu = async (req, res) => {
@@ -75,5 +78,6 @@ const deleteMenu = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 module.exports = { getAllMenus, getMenuById, addMenu, updateMenu, deleteMenu };
