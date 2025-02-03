@@ -135,5 +135,38 @@ const updatePelanggan = async (req, res) => {
     }
 };
 
+const deletePelanggan = async (req, res) => {
+    const { id } = req.params;
 
-module.exports = { getAllPelanggan, createPelanggan, getPelangganById, updatePelanggan }
+    try {
+        // Hapus data pelanggan dari tabel 'pelanggan'
+        const { data, error } = await supabase
+            .from('pelanggan') // Nama tabel
+            .delete() // Hapus data
+            .eq('id', id) // ID pelanggan yang akan dihapus
+            .select(); // Ambil data yang dihapus
+
+        if (error) throw error; // Tangani error dari Supabase
+
+        // Jika data tidak ditemukan, kembalikan status 404
+        if (!data.length) {
+            return res.status(404).json({
+                message: 'Pelanggan not found',
+            });
+        }
+
+        // Jika berhasil, kembalikan respons sukses
+        res.status(200).json({
+            message: 'Pelanggan deleted successfully',
+            data,
+        });
+    } catch (error) {
+        // Tangani error umum lainnya
+        res.status(500).json({
+            message: 'Error deleting pelanggan',
+            error: error.message,
+        });
+    }
+};
+
+module.exports = { getAllPelanggan, createPelanggan, getPelangganById, updatePelanggan, deletePelanggan }
