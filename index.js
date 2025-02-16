@@ -7,6 +7,7 @@ const pelangganRoutes = require("./routes/pelangganRoutes");
 const pgRoutes = require("./routes/pgRoutes");
 const transaksiRoutes = require("./routes/transaksiRoutes");
 const reservasiRoutes = require("./routes/reservasiRoutes");
+const bahanRoutes = require('./routes/bahanRoutes');
 const cors = require("cors");
 
 const app = express();
@@ -21,6 +22,7 @@ app.use("/pelanggan", pelangganRoutes);
 app.use("/pgw", pgRoutes)
 app.use("/transaksi", transaksiRoutes);
 app.use("/api", reservasiRoutes);
+app.use('/bahan', bahanRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
