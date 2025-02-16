@@ -1,28 +1,42 @@
 const supabase = require('../services/supabaseClient');
 
-// Mendapatkan semua reservasi
+// Mendapatkan semua reservasi dengan nama pelanggan
 const getAllReservasi = async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('reservasi')
-            .select('*');
+            .select(`
+                *,
+                pelanggan (nama)
+            `);
         if (error) throw error;
+        
+        // const reservasiWithPelanggan = data.map(reservasi => ({
+        //     ...reservasi,
+        //     nama: reservasi.pelanggan ? reservasi.pelanggan.nama : null
+        // }));
+
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Mendapatkan reservasi berdasarkan ID
+// Mendapatkan reservasi berdasarkan ID dengan nama pelanggan
 const getReservasiById = async (req, res) => {
     const { id } = req.params;
     try {
         const { data, error } = await supabase
             .from('reservasi')
-            .select('*')
+            .select(`
+                *,
+                pelanggan (nama)
+            `)
             .eq('id_reservasi', id)
             .single();
         if (error) throw error;
+
+
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -44,9 +58,14 @@ const addReservasi = async (req, res) => {
         const { data, error } = await supabase
             .from('reservasi')
             .insert([{ tanggal_reservasi, waktu_reservasi, no_meja, jumlah_tamu, status, request, id_pelanggan }])
-            .select();
+            .select(`
+                *,
+                pelanggan (nama)
+            `);
         if (error) throw error;
-        res.status(201).json(data[0]);
+
+
+        res.status(201).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -69,9 +88,15 @@ const updateReservasi = async (req, res) => {
             .from('reservasi')
             .update({ tanggal_reservasi, waktu_reservasi, no_meja, jumlah_tamu, status, request, id_pelanggan })
             .eq('id_reservasi', id)
-            .select();
+            .select(`
+                *,
+                pelanggan (nama)
+            `);
         if (error) throw error;
-        res.status(200).json(data[0]);
+
+
+
+        res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
